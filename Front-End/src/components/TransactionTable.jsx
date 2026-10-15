@@ -1,0 +1,9 @@
+import React from 'react';
+import { Pencil, Trash2, Tag } from 'lucide-react';
+import { IconBox, money, prettyDate } from './common.jsx';
+
+export function TransactionTable({ transactions, onEdit, onDelete, compact = false, actionsDisabled = false }) {
+  return <div className="table-scroll"><table className="transaction-table"><thead><tr><th>TRANSACTION</th><th>CATEGORY</th><th>DATE</th><th>AMOUNT</th><th aria-label="Actions" /></tr></thead><tbody>
+    {transactions.length ? transactions.map((item) => <tr key={item.id}><td><div className="transaction-name"><IconBox icon={item.icon ?? Tag} color={item.color ?? 'teal'} size={17} /><span><strong>{item.name}</strong><small>{item.note || item.category}</small></span></div></td><td><span className="category-pill"><i className={`legend-dot ${item.color}`} />{item.category}</span></td><td className="date-cell">{prettyDate(item.date)}</td><td className={`amount-cell ${item.type}`}><span>{item.type === 'income' ? '+' : '−'} {money(item.amount)}</span></td><td><div className="row-actions"><button aria-label="Edit transaction" onClick={() => onEdit(item)} disabled={actionsDisabled}><Pencil size={14} /></button><button aria-label="Delete transaction" onClick={() => onDelete(item.id)} disabled={actionsDisabled}><Trash2 size={14} /></button></div></td></tr>) : <tr><td colSpan="5" className="empty-state">No transactions found. Add one to get started.</td></tr>}
+  </tbody></table>{compact && <div className="mobile-transactions">{transactions.slice(0, 4).map((item) => <div className="mobile-transaction" key={item.id}><IconBox icon={item.icon ?? Tag} color={item.color ?? 'teal'} /><div><strong>{item.name}</strong><small>{item.category} · {prettyDate(item.date)}</small></div><b className={`amount-cell ${item.type}`}><span>{item.type === 'income' ? '+' : '−'} {money(item.amount)}</span></b></div>)}</div>}</div>;
+}
