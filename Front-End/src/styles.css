@@ -527,3 +527,50 @@ h1 { font-size: 29px; }
   .auth-form-side { min-height: calc(100vh - 112px); padding: 26px 20px 32px; }
   .auth-form-wrap h2 { font-size: 25px; }
 }
+
+.auth-form-side { position: relative; }
+.auth-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid #e6ebe5;
+  border-radius: 9px;
+  background: #fff;
+  color: #65736a;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.auth-theme-toggle:hover { border-color: #cbd9ce; background: #f7faf6; color: #347967; }
+.auth-theme-toggle:focus-visible { outline: 3px solid rgba(69, 139, 116, .25); outline-offset: 2px; }
+.auth-screen.dark-mode { background: #202c25; color: #e1e9e2; }
+.auth-screen.dark-mode .auth-decoration { background: radial-gradient(ellipse at 78% 70%, rgba(105, 153, 113, .12), transparent 46%), #26372e; }
+.auth-screen.dark-mode .auth-brand { color: #e1e9e2; }
+.auth-screen.dark-mode .auth-quote .eyebrow,.auth-screen.dark-mode .auth-footnote { color: #a3b5a4; }
+.auth-screen.dark-mode .auth-quote h1 { color: #e1e9e2; }
+.auth-screen.dark-mode .auth-quote h1 em { color: #8ac09a; }
+.auth-screen.dark-mode .auth-quote p { color: #b1beb2; }
+.auth-screen.dark-mode .auth-form-side { background: #202c25; }
+.auth-screen.dark-mode .auth-form-wrap h2 { color: #e1e9e2; }
+.auth-screen.dark-mode .auth-form-wrap > p { color: #a4b0a7; }
+.auth-screen.dark-mode .auth-welcome { color: #a2b3a5; }
+.auth-screen.dark-mode .auth-input { border-color: #3a4940; background: #26342d; color: #a6b5aa; }
+.auth-screen.dark-mode .auth-input input { background: transparent; color: #e1e9e2; }
+.auth-screen.dark-mode .auth-input input::placeholder { color: #88988d; }
+.auth-screen.dark-mode .auth-input button { color: #a6b5aa; }
+.auth-screen.dark-mode .forgot-link,.auth-screen.dark-mode .auth-switch button { color: #9ac5a3; }
+.auth-screen.dark-mode .auth-switch,.auth-screen.dark-mode .auth-security { color: #a1aea4; }
+.auth-screen.dark-mode .auth-security svg { color: #8db99a; }
+.auth-screen.dark-mode .auth-theme-toggle { border-color: #3a4940; background: #26342d; color: #c3d0c5; }
+.auth-screen.dark-mode .auth-theme-toggle:hover { border-color: #607967; background: #304037; color: #c0e0c5; }
+
+@media (max-width: 650px) {
+  .auth-theme-toggle { top: 15px; right: 15px; min-height: 34px; padding: 0 9px; font-size: 10px; }
+}

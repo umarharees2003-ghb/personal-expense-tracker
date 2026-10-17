@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Moon, ShieldCheck, Sun, Wallet } from 'lucide-react';
 
-export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }) {
+export function AuthScreen({ onLogin, onRegister, loading, error, onClearError, dark, setDark }) {
   const [register, setRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -35,7 +35,7 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
     onClearError();
   }
 
-  return <div className="auth-screen">
+  return <div className={`auth-screen${dark ? ' dark-mode' : ''}`}>
     <div className="auth-decoration">
       <div className="auth-brand"><span className="brand-mark"><Wallet size={20} /></span>finora<span className="brand-period">.</span></div>
       <div className="auth-quote">
@@ -47,6 +47,10 @@ export function AuthScreen({ onLogin, onRegister, loading, error, onClearError }
       </div>
     </div>
     <div className="auth-form-side">
+      <button className="auth-theme-toggle" type="button" onClick={() => setDark(!dark)} aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`}>
+        {dark ? <Sun size={16} /> : <Moon size={16} />}
+        <span>{dark ? 'Light mode' : 'Dark mode'}</span>
+      </button>
       <div className="auth-form-wrap">
         <span className="auth-welcome">{register ? 'A FRESH START' : 'YOUR MONEY, MADE SIMPLE'}</span>
         <h2>{register ? 'Create your account' : 'Welcome back'}</h2>

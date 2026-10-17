@@ -243,7 +243,7 @@ function AppContent() {
   }
 
   if (authLoading) return <div className="auth-loading"><RequestStatus loading /></div>;
-  if (!user) return <AuthScreen onLogin={login} onRegister={register} loading={authBusy} error={authError} onClearError={clearAuthError} />;
+  if (!user) return <AuthScreen onLogin={login} onRegister={register} loading={authBusy} error={authError} onClearError={clearAuthError} dark={dark} setDark={setDark} />;
 
   const transactionProps = {
     transactions: finance.transactions,
