@@ -574,3 +574,63 @@ h1 { font-size: 29px; }
 @media (max-width: 650px) {
   .auth-theme-toggle { top: 15px; right: 15px; min-height: 34px; padding: 0 9px; font-size: 10px; }
 }
+
+.app-shell .nav-caption,.app-shell .eyebrow { font-size: 11px; }
+.app-shell .workspace-copy strong,.app-shell .user-copy strong,.app-shell .upgrade-card strong { font-size: 13px; }
+.app-shell .workspace-copy small,.app-shell .user-copy small,.app-shell .upgrade-card p,.app-shell .upgrade-card button { font-size: 12px; }
+.app-shell .nav-link { font-size: 14px; }
+.app-shell .nav-count { font-size: 12px; }
+.app-shell .breadcrumbs,.app-shell .global-search input { font-size: 13px; }
+.app-shell .global-search kbd { font-size: 11px; }
+.app-shell .welcome-row p,.app-shell .page-title-row p,.app-shell .panel-heading p { font-size: 14px; }
+.app-shell .button-primary,.app-shell .button-quiet,.app-shell .text-action,.app-shell button { font-size: 14px; }
+.app-shell .summary-top,.app-shell .transaction-stats > div > span,.app-shell .bottom-insight span { font-size: 13px; }
+.app-shell .summary-change,.app-shell .summary-change small,.app-shell .savings-top,.app-shell .savings-card p { font-size: 12px; }
+.app-shell .panel-heading h2,.app-shell .profile-form-panel h2,.app-shell .settings-section-heading h2 { font-size: 16px; }
+.app-shell .segmented-control button { font-size: 12px; }
+.app-shell .chart-summary span,.app-shell .chart-legend,.app-shell .category-legend-row { font-size: 12px; }
+.app-shell .chart-y-labels,.app-shell .report-y-labels,.app-shell .bar-group small,.app-shell .report-bar-group small { font-size: 11px; }
+.app-shell .donut-center span,.app-shell .category-legend-row > small,.app-shell .chart-note { font-size: 11px; }
+.app-shell .transaction-table thead th { font-size: 11px; }
+.app-shell .transaction-table td,.app-shell .transaction-name strong,.app-shell .amount-cell { font-size: 13px; }
+.app-shell .transaction-name small,.app-shell .category-pill { font-size: 12px; }
+.app-shell .bottom-insight strong { font-size: 13px; }
+.app-shell .page-footer { font-size: 12px; }
+.app-shell .transaction-stats strong { font-size: 20px; }
+.app-shell .transaction-stats strong small { font-size: 12px; }
+.app-shell .filter-tabs button,.app-shell .table-search input,.app-shell .table-filters select { font-size: 13px; }
+.app-shell .category-intro-card strong,.app-shell .category-card-name { font-size: 14px; }
+.app-shell .category-intro-card p,.app-shell .category-intro-card > span,.app-shell .category-trans-count,
+.app-shell .category-budget small,.app-shell .category-budget strong span,.app-shell .budget-pct,
+.app-shell .add-category-card strong,.app-shell .add-category-card small { font-size: 12px; }
+.app-shell .category-budget strong { font-size: 14px; }
+.app-shell .report-period,.app-shell .report-period select,.app-shell .report-kpi > span,
+.app-shell .report-kpi > small,.app-shell .report-chart-badge { font-size: 13px; }
+.app-shell .report-kpi > strong { font-size: 22px; }
+.app-shell .report-category-row > span:nth-child(2),.app-shell .report-category-row > strong,
+.app-shell .report-insight strong,.app-shell .report-insight p { font-size: 13px; }
+.app-shell .profile-card > strong { font-size: 16px; }
+.app-shell .profile-card > span:not(.profile-avatar-large),.app-shell .profile-plan,
+.app-shell .form-field,.app-shell .form-field input,.app-shell .form-field select { font-size: 14px; }
+.app-shell .profile-form-panel h3 { font-size: 15px; }
+.app-shell .password-row strong,.app-shell .setting-row strong { font-size: 14px; }
+.app-shell .password-row small,.app-shell .settings-section-heading p,.app-shell .setting-row small { font-size: 13px; }
+.app-shell .danger-zone h3,.app-shell .danger-zone p,.app-shell .danger-zone button { font-size: 13px; }
+.app-shell .modal-kicker,.app-shell .optional-label { font-size: 11px; }
+.app-shell .modal-heading h2 { font-size: 22px; }
+.app-shell .modal-heading p,.app-shell .type-selector button,.app-shell .amount-input-wrap > span,
+.app-shell .category-suggestion,.app-shell .toast { font-size: 13px; }
+.app-shell .field-hint,.app-shell .request-state,.app-shell .form-error,.app-shell .category-required,
+.app-shell .date-range-fields label { font-size: 13px; }
+.app-shell input,.app-shell select { font-size: 14px; }
+.auth-screen .form-field,.auth-screen .auth-form-wrap > p,.auth-screen .auth-switch,
+.auth-screen .auth-switch button,.auth-screen .auth-theme-toggle { font-size: 14px; }
+.auth-screen .auth-welcome,.auth-screen .auth-footnote,.auth-screen .auth-security,
+.auth-screen .forgot-link,.auth-screen .field-hint { font-size: 12px; }
+.auth-screen .auth-input input { font-size: 15px; }
+
+@media (max-width: 650px) {
+  .app-shell .transaction-name strong,.app-shell .amount-cell { font-size: 12px; }
+  .app-shell .transaction-name small,.app-shell .category-pill { font-size: 11px; }
+  .app-shell .transaction-table td { font-size: 12px; }
+}
