@@ -9,15 +9,17 @@ export function Dashboard({ profile, income, expense, balance, monthlyIncome, mo
   const [chartMode, setChartMode] = useState('Overview');
   const categoryColors = { orange: '#d99059', purple: '#9a87b7', blue: '#7798bd', pink: '#d7899c', red: '#ce776d', green: '#72a985', teal: '#66a8a1', yellow: '#d1aa60' };
   const breakdown = categories.filter((item) => item.spent > 0).sort((a, b) => b.spent - a.spent);
+  const categoryTotal = breakdown.reduce((total, item) => total + Number(item.spent), 0);
   let angle = 0;
   const donutBackground = `conic-gradient(${breakdown.map((item) => {
     const start = angle;
-    angle += expense ? item.spent / expense * 100 : 0;
+    angle += categoryTotal ? item.spent / categoryTotal * 100 : 0;
     return `${categoryColors[item.color] ?? categoryColors.teal} ${start}% ${angle}%`;
   }).join(', ') || '#e8ece6 0% 100%'})`;
   const chartMax = Math.max(monthlyIncome, monthlyExpense, 1);
   const barHeight = (value) => `${value ? Math.max(value / chartMax * 88, 2) : 0}%`;
   const savingsRate = monthlyIncome ? monthlyBalance / monthlyIncome * 100 : 0;
+  const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date());
   return <>
     <div className="welcome-row">
       <div><div className="eyebrow"><span className="live-dot" /> {new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(new Date()).toUpperCase()}</div><h1>Welcome, {profile.name.split(' ')[0]} <span className="wave">✳</span></h1><p>Here’s what’s happening with your money today.</p></div>
@@ -33,19 +35,19 @@ export function Dashboard({ profile, income, expense, balance, monthlyIncome, mo
     </section>
     <section className="dashboard-grid">
       <div className="panel spending-panel">
-        <div className="panel-heading"><div><h2>Cash flow</h2><p>Your income and spending over time</p></div><div className="segmented-control"><button className={chartMode === 'Overview' ? 'selected' : ''} onClick={() => setChartMode('Overview')}>Overview</button><button className={chartMode === 'Income' ? 'selected' : ''} onClick={() => setChartMode('Income')}>Income</button><button className={chartMode === 'Expenses' ? 'selected' : ''} onClick={() => setChartMode('Expenses')}>Expenses</button></div></div>
-        <div className="chart-summary"><strong>{money(monthlyIncome + monthlyExpense)}</strong><span>Current month <i>income and expenses</i></span></div>
-        <div className="bar-chart" aria-label="Income and expense bar chart">
+        <div className="panel-heading"><div><h2>Monthly cash flow</h2><p>Income and expenses for {monthLabel}</p></div><div className="segmented-control" aria-label="Emphasize cash flow series">{['Overview', 'Income', 'Expenses'].map((mode) => <button key={mode} type="button" className={chartMode === mode ? 'selected' : ''} aria-pressed={chartMode === mode} onClick={() => setChartMode(mode)}>{mode}</button>)}</div></div>
+        <div className="chart-summary"><strong>{money(monthlyIncome)}</strong><span>Income <i>·</i> Expenses {money(monthlyExpense)}</span></div>
+        <div className="bar-chart" role="img" aria-label={`Cash flow for ${monthLabel}: income ${money(monthlyIncome)}, expenses ${money(monthlyExpense)}`}>
           <div className="chart-y-labels"><span>{money(chartMax)}</span><span>{money(chartMax / 2)}</span><span>0</span></div>
-          <div className="chart-plot"><div className="chart-gridlines"><i /><i /><i /></div><div className="bar-groups"><div className="bar-group"><div className="bars"><span className={`bar income-bar${chartMode === 'Expenses' ? ' muted-bar' : ''}`} style={{ height: barHeight(income) }} /><span className={`bar expense-bar${chartMode === 'Income' ? ' muted-bar' : ''}`} style={{ height: barHeight(expense) }} /></div><small>{new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date())}</small></div></div></div>
+          <div className="chart-plot"><div className="chart-gridlines"><i /><i /><i /></div><div className="bar-groups"><div className="bar-group"><div className="bars"><span aria-hidden="true" className={`bar income-bar${chartMode === 'Expenses' ? ' muted-bar' : ''}`} style={{ height: barHeight(monthlyIncome) }} /><span aria-hidden="true" className={`bar expense-bar${chartMode === 'Income' ? ' muted-bar' : ''}`} style={{ height: barHeight(monthlyExpense) }} /></div><small>{new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date())}</small></div></div></div>
         </div>
-        <div className="chart-legend"><span><i className="legend-income" /> Income</span><span><i className="legend-expense" /> Expenses</span><span className="chart-note">Compared to previous 6 months</span></div>
+        <div className="chart-legend"><span><i className="legend-income" /> Income</span><span><i className="legend-expense" /> Expenses</span></div>
       </div>
       <div className="panel breakdown-panel">
         <div className="panel-heading"><div><h2>Spending breakdown</h2><p>Where your money goes</p></div><button className="icon-button subtle-button" onClick={() => onNavigate('Categories')} aria-label="View categories"><Ellipsis size={19} /></button></div>
-        <div className="donut-wrap"><div className="donut-chart" style={{ background: donutBackground }}><div className="donut-center"><strong>{money(expense)}</strong><span>total spent</span></div></div></div>
+        <div className="donut-wrap"><div className="donut-chart" role="img" aria-label={`Monthly spending by category totals ${money(categoryTotal)}`} style={{ background: donutBackground }}><div className="donut-center"><strong>{money(categoryTotal)}</strong><span>by category</span></div></div></div>
         <div className="category-legend">
-          {breakdown.slice(0, 4).map((item) => <div className="category-legend-row" key={item.name}><span><i className={`legend-dot ${item.color}`} />{item.name}</span><strong>{money(item.spent)}</strong><small>{expense ? `${Math.round(item.spent / expense * 100)}%` : '0%'}</small></div>)}
+          {breakdown.slice(0, 4).map((item) => <div className="category-legend-row" key={item.name}><span><i className={`legend-dot ${item.color}`} />{item.name}</span><strong>{money(item.spent)}</strong><small>{categoryTotal ? `${Math.round(item.spent / categoryTotal * 100)}%` : '0%'}</small></div>)}
           {!breakdown.length && <p className="empty-state">No spending by category this month.</p>}
         </div>
         <button className="text-action full-action" onClick={() => onNavigate('Reports')}>View detailed report <ArrowRight size={15} /></button>

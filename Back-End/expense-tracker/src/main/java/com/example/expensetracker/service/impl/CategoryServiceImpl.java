@@ -26,9 +26,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse create(String email, CategoryRequest request) {
+        User user = serviceSupport.requireUser(email);
+        String trimmedName = request.name().trim();
+        if (categoryRepository.existsByNameIgnoreCaseAndUser_Id(trimmedName, user.getId())) {
+            throw new ConflictException("Category with name '" + trimmedName + "' already exists");
+        }
         Category category = new Category();
-        category.setName(request.name().trim());
-        category.setUser(serviceSupport.requireUser(email));
+        category.setName(trimmedName);
+        category.setUser(user);
         return toResponse(categoryRepository.save(category));
     }
 
@@ -50,8 +55,13 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public CategoryResponse update(String email, Long id, CategoryRequest request) {
-        Category category = requireCategory(id, serviceSupport.requireUser(email).getId());
-        category.setName(request.name().trim());
+        Long userId = serviceSupport.requireUser(email).getId();
+        Category category = requireCategory(id, userId);
+        String trimmedName = request.name().trim();
+        if (categoryRepository.existsByNameIgnoreCaseAndUser_IdAndIdNot(trimmedName, userId, id)) {
+            throw new ConflictException("Category with name '" + trimmedName + "' already exists");
+        }
+        category.setName(trimmedName);
         return toResponse(categoryRepository.save(category));
     }
 

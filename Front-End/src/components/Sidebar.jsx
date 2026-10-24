@@ -1,7 +1,6 @@
 import React from 'react';
 import {
-  ArrowRight, ChevronDown, FileText, Grid2X2, LayoutDashboard, LogOut,
-  Receipt, Settings, ShoppingBag, Sparkles, UserRound, Wallet,
+  FileText, Grid2X2, LayoutDashboard, LogOut, Receipt, Settings, UserRound, Wallet,
 } from 'lucide-react';
 
 const navigation = [
@@ -11,7 +10,7 @@ const navigation = [
   { label: 'Reports', icon: FileText, section: 'manage' },
 ];
 
-export default function Sidebar({ page, setPage, mobileNav, setMobileNav, transactions, profile, setLoggedIn, flash }) {
+export default function Sidebar({ page, setPage, mobileNav, setMobileNav, transactions, profile, setLoggedIn }) {
   const initials = profile.name.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'U';
   return <aside className={`sidebar${mobileNav ? ' nav-open' : ''}`}>
     <a className="brand" href="#" onClick={(event) => { event.preventDefault(); setPage('Overview'); }}>
@@ -19,9 +18,8 @@ export default function Sidebar({ page, setPage, mobileNav, setMobileNav, transa
       <span>finora<span className="brand-period">.</span></span>
     </a>
     <div className="workspace-switch">
-      <span className="workspace-avatar">U</span>
+      <span className="workspace-avatar">{initials}</span>
       <span className="workspace-copy"><strong>Personal workspace</strong><small>Personal account</small></span>
-      <ChevronDown size={15} className="workspace-chevron" />
     </div>
     <span className="nav-caption">WORKSPACE</span>
     <nav className="side-nav" aria-label="Main navigation">
@@ -36,12 +34,6 @@ export default function Sidebar({ page, setPage, mobileNav, setMobileNav, transa
       ))}
     </nav>
     <div className="sidebar-bottom">
-      <div className="upgrade-card">
-        <span className="upgrade-icon"><Sparkles size={16} /></span>
-        <strong>A little more clarity?</strong>
-        <p>Get more insights with Finora Plus.</p>
-        <button onClick={() => flash('You’re already making great progress!')}>Explore Plus <ArrowRight size={14} /></button>
-      </div>
       <button className={`nav-link${page === 'Settings' ? ' active' : ''}`} onClick={() => { setPage('Settings'); setMobileNav(false); }}><Settings size={18} /><span>Settings</span></button>
       <button className={`nav-link${page === 'Profile' ? ' active' : ''}`} onClick={() => { setPage('Profile'); setMobileNav(false); }}><UserRound size={18} /><span>My profile</span></button>
       <div className="sidebar-user">

@@ -1,0 +1,60 @@
+name: Finora Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-test:
+    name: Backend Tests & Build (Java 21 / Spring Boot)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Make Maven wrapper executable
+        run: chmod +x Back-End/expense-tracker/mvnw
+
+      - name: Run Backend Tests
+        working-directory: Back-End/expense-tracker
+        run: ./mvnw test
+
+  frontend-test:
+    name: Frontend Lint, Test & Build (React 18 / Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: Front-End/package-lock.json
+
+      - name: Install dependencies
+        working-directory: Front-End
+        run: npm ci
+
+      - name: Run Frontend Linter
+        working-directory: Front-End
+        run: npm run lint
+
+      - name: Run Frontend Tests (Vitest)
+        working-directory: Front-End
+        run: npm run test
+
+      - name: Build Frontend for Production
+        working-directory: Front-End
+        run: npm run build
+

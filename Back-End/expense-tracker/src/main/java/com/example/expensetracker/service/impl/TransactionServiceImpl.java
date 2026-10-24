@@ -1,5 +1,6 @@
 package com.example.expensetracker.service.impl;
 
+import com.example.expensetracker.dto.PageResponse;
 import com.example.expensetracker.dto.TransactionRequest;
 import com.example.expensetracker.dto.TransactionResponse;
 import com.example.expensetracker.entity.Category;
@@ -13,6 +14,9 @@ import com.example.expensetracker.repository.TransactionRepository;
 import com.example.expensetracker.service.TransactionService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -47,36 +51,50 @@ public class TransactionServiceImpl implements TransactionService {
     public List<TransactionResponse> search(String email, TransactionType type, Long categoryId,
                                             Integer month, Integer year, LocalDate startDate,
                                             LocalDate endDate, String search) {
+        return search(email, type, categoryId, month, year, startDate, endDate, search, "date", "desc");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TransactionResponse> search(String email, TransactionType type, Long categoryId,
+                                            Integer month, Integer year, LocalDate startDate,
+                                            LocalDate endDate, String search, String sortBy,
+                                            String sortDirection) {
         User user = serviceSupport.requireUser(email);
         validateSearchDates(month, year, startDate, endDate);
-
-        Specification<Transaction> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            predicates.add(criteriaBuilder.equal(root.get("user").get("id"), user.getId()));
-            if (type != null) {
-                predicates.add(criteriaBuilder.equal(root.get("type"), type));
-            }
-            if (categoryId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
-            }
-            if (startDate != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), startDate));
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), endDate));
-            } else if (month != null) {
-                LocalDate firstDay = LocalDate.of(year, month, 1);
-                predicates.add(criteriaBuilder.between(root.get("date"), firstDay, firstDay.withDayOfMonth(
-                        firstDay.lengthOfMonth())));
-            }
-            if (search != null && !search.isBlank()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("description")),
-                        "%" + search.trim().toLowerCase(Locale.ROOT) + "%"));
-            }
-            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
-        };
-
-        Sort sort = Sort.by(Sort.Order.desc("date"), Sort.Order.desc("createdAt"));
+        Specification<Transaction> specification = buildSpecification(user.getId(), type, categoryId, month, year, startDate, endDate, search);
+        Sort sort = buildSort(sortBy, sortDirection);
         return transactionRepository.findAll(specification, sort).stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<TransactionResponse> searchPaged(
+            String email, TransactionType type, Long categoryId,
+            Integer month, Integer year, LocalDate startDate,
+            LocalDate endDate, String search, String sortBy,
+            String sortDirection, int page, int size) {
+        if (page < 0) page = 0;
+        if (size <= 0) size = 10;
+        if (size > 100) size = 100;
+
+        User user = serviceSupport.requireUser(email);
+        validateSearchDates(month, year, startDate, endDate);
+        Specification<Transaction> specification = buildSpecification(user.getId(), type, categoryId, month, year, startDate, endDate, search);
+        Sort sort = buildSort(sortBy, sortDirection);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Transaction> pageResult = transactionRepository.findAll(specification, pageable);
+        List<TransactionResponse> content = pageResult.getContent().stream().map(this::toResponse).toList();
+        return new PageResponse<>(
+                content,
+                pageResult.getNumber(),
+                pageResult.getSize(),
+                pageResult.getTotalElements(),
+                pageResult.getTotalPages(),
+                pageResult.isFirst(),
+                pageResult.isLast()
+        );
     }
 
     @Override
@@ -100,6 +118,47 @@ public class TransactionServiceImpl implements TransactionService {
     public void delete(String email, Long id) {
         Long userId = serviceSupport.requireUser(email).getId();
         transactionRepository.delete(requireTransaction(id, userId));
+    }
+
+    private Specification<Transaction> buildSpecification(Long userId, TransactionType type, Long categoryId,
+                                                          Integer month, Integer year, LocalDate startDate,
+                                                          LocalDate endDate, String search) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
+            if (type != null) {
+                predicates.add(criteriaBuilder.equal(root.get("type"), type));
+            }
+            if (categoryId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+            }
+            if (startDate != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("date"), startDate));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("date"), endDate));
+            } else if (month != null) {
+                LocalDate firstDay = LocalDate.of(year, month, 1);
+                predicates.add(criteriaBuilder.between(root.get("date"), firstDay, firstDay.withDayOfMonth(
+                        firstDay.lengthOfMonth())));
+            }
+            if (search != null && !search.isBlank()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("description")),
+                        "%" + search.trim().toLowerCase(Locale.ROOT) + "%"));
+            }
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
+    private Sort buildSort(String sortBy, String sortDirection) {
+        boolean asc = "asc".equalsIgnoreCase(sortDirection);
+        if ("amount".equalsIgnoreCase(sortBy)) {
+            return asc
+                    ? Sort.by(Sort.Order.asc("amount"), Sort.Order.desc("date"))
+                    : Sort.by(Sort.Order.desc("amount"), Sort.Order.desc("date"));
+        }
+        return asc
+                ? Sort.by(Sort.Order.asc("date"), Sort.Order.asc("createdAt"))
+                : Sort.by(Sort.Order.desc("date"), Sort.Order.desc("createdAt"));
     }
 
     private void applyRequest(Transaction transaction, TransactionRequest request, Long userId) {

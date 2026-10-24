@@ -1,5 +1,6 @@
 package com.example.expensetracker.controller;
 
+import com.example.expensetracker.dto.PageResponse;
 import com.example.expensetracker.dto.TransactionRequest;
 import com.example.expensetracker.dto.TransactionResponse;
 import com.example.expensetracker.entity.TransactionType;
@@ -43,7 +44,7 @@ public class TransactionController {
     }
 
     @GetMapping
-    @Operation(summary = "List and filter transactions")
+    @Operation(summary = "List, filter, and sort transactions")
     public List<TransactionResponse> search(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) TransactionType type,
@@ -52,9 +53,30 @@ public class TransactionController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "date") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDirection) {
         return transactionService.search(user.getUsername(), type, categoryId, month, year,
-                startDate, endDate, search);
+                startDate, endDate, search, sortBy, sortDirection);
+    }
+
+    @GetMapping("/paged")
+    @Operation(summary = "Paginated, filtered, and sorted transactions")
+    public PageResponse<TransactionResponse> searchPaged(
+            @AuthenticationPrincipal UserDetails user,
+            @RequestParam(required = false) TransactionType type,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "date") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortDirection,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+        return transactionService.searchPaged(user.getUsername(), type, categoryId, month, year,
+                startDate, endDate, search, sortBy, sortDirection, page, size);
     }
 
     @GetMapping("/{id}")

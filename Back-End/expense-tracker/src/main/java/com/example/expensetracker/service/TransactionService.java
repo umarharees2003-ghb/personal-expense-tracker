@@ -1,5 +1,6 @@
 package com.example.expensetracker.service;
 
+import com.example.expensetracker.dto.PageResponse;
 import com.example.expensetracker.dto.TransactionRequest;
 import com.example.expensetracker.dto.TransactionResponse;
 import com.example.expensetracker.entity.TransactionType;
@@ -13,6 +14,15 @@ public interface TransactionService {
     List<TransactionResponse> search(String email, TransactionType type, Long categoryId,
                                      Integer month, Integer year, LocalDate startDate,
                                      LocalDate endDate, String search);
+
+    List<TransactionResponse> search(String email, TransactionType type, Long categoryId,
+                                     Integer month, Integer year, LocalDate startDate,
+                                     LocalDate endDate, String search, String sortBy, String sortDirection);
+
+    PageResponse<TransactionResponse> searchPaged(String email, TransactionType type, Long categoryId,
+                                                  Integer month, Integer year, LocalDate startDate,
+                                                  LocalDate endDate, String search, String sortBy,
+                                                  String sortDirection, int page, int size);
 
     TransactionResponse getById(String email, Long id);
 

@@ -25,14 +25,15 @@ export function useFinanceData() {
     setErrors({});
   }, []);
 
-  const loadTransactions = useCallback(async (filters) => {
+  const loadTransactions = useCallback(async (filters, options = {}) => {
     setLoading((current) => ({ ...current, transactions: true }));
     setErrors((current) => ({ ...current, transactions: '' }));
     try {
-      const result = await listTransactions(filters);
+      const result = await listTransactions(filters, options);
       setTransactions(result.map(mapTransaction));
       return result;
     } catch (error) {
+      if (error?.name === 'CanceledError' || error?.code === 'ERR_CANCELED') return [];
       setErrors((current) => ({ ...current, transactions: getApiError(error, 'Unable to load transactions.') }));
       throw error;
     } finally {

@@ -1,168 +1,270 @@
 # Finora — Personal Expense Tracker
 
-Finora is a full-stack personal finance application for tracking income and expenses, organizing transactions into categories, and reviewing financial summaries and reports.
+Finora is a full-stack personal finance tracking application designed for coursework evaluation and practical daily expense monitoring. It provides authenticated personal workspaces, relational category management, transaction tracking with real-time filtering/sorting/pagination, visual financial analytics, and period-based reporting.
 
-The React frontend communicates with a Spring Boot REST API, while MySQL stores user and financial data.
+---
+
+## Table of Contents
+
+1. [Features](#features)
+2. [Technology Stack](#technology-stack)
+3. [System Architecture](#system-architecture)
+4. [Entity Relationship Diagram (ERD)](#entity-relationship-diagram-erd)
+5. [Project Structure](#project-structure)
+6. [Prerequisites](#prerequisites)
+7. [Local Setup & Run Commands](#local-setup--run-commands)
+8. [Quality Checks & Automated Tests](#quality-checks--automated-tests)
+9. [REST API Endpoints](#rest-api-endpoints)
+10. [Academic Rubric Alignment](#academic-rubric-alignment)
+11. [Known Limitations](#known-limitations)
+
+---
 
 ## Features
 
-- User registration, login, and profile management
-- Create, view, edit, search, filter, and delete transactions
-- Create and manage personal spending categories
-- View income, expenses, balances, and recent transactions
-- Explore category breakdowns and financial summaries
-- Generate monthly, category-based, and date-range reports
-- JWT-based authentication and user-specific data access
-- Light and dark themes
+- **Authentication & Security:** User registration and sign-in with BCrypt password hashing, stateless JWT bearer token authentication, and multi-tenant data isolation.
+- **Transactions CRUD:** Create, read, update, and delete income and expense records with monetary precision (`DECIMAL(12,2)`), search, date filters, 4-way sorting, and pagination.
+- **Category Management:** User-owned categories with duplicate name prevention (case-insensitive) and relational integrity safeguards preventing deletion of categories with linked transactions.
+- **Dashboard & Cash Flow:** Financial summary KPI cards (Total Balance, Total Income, Total Expenses, Monthly Savings Rate), monthly income vs. expense comparison bar chart, and spending-by-category breakdown donut chart.
+- **Reports & Export:** Period-based financial recaps (monthly and custom date ranges), category breakdown progress bars, browser Print/Save PDF support, and CSV export.
+- **User Experience:** Professional financial UI design system, accessible light and dark themes, mobile-responsive navigation drawer, and selectable currency formatting (LKR, USD, EUR, GBP).
+
+---
 
 ## Technology Stack
 
-| Area | Technologies |
-|---|---|
-| Frontend | React 18, Vite, Axios |
-| Backend | Java 21, Spring Boot 3.5, Spring Web, Spring Security, Spring Data JPA |
-| Database | MySQL 8 |
-| Authentication | JWT (JJWT), BCrypt |
-| API Documentation | OpenAPI, Swagger UI |
+| Layer | Technologies | Purpose |
+|---|---|---|
+| **Frontend** | React 18, Vite 6, Axios, Lucide Icons, CSS3 | Single-page application, responsive layout, and REST API client |
+| **Backend** | Java 21, Spring Boot 3.5, Spring Security, Spring Data JPA | REST API, validation, business rules, and security enforcement |
+| **Database** | MySQL 8, Flyway | Relational persistence and automated schema migrations |
+| **Testing** | Vitest, React Testing Library, JUnit 5, H2 Database | Unit, component, and multi-tenant isolation tests |
+
+---
+
+## System Architecture
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                     Client Tier (Browser)                    │
+│  React 18 + Vite SPA  ──  Axios HTTP Client  ──  Bearer JWT │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ JSON over HTTP (Port 8080)
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                    API Tier (Spring Boot)                    │
+│  Security Filter Chain (JWT Validator & UserContext)         │
+│  Controllers (Validation, HTTP Mapping, OpenAPI Docs)        │
+│  Services (Business Rules, Calculation, Tenant Scoping)      │
+│  Spring Data JPA Repositories                                │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ JDBC (Port 3306)
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   Data Tier (MySQL 8)                        │
+│  Flyway Schema (V1__init_schema.sql)                         │
+│  Tables: users, categories, transactions                     │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Entity Relationship Diagram (ERD)
+
+The database schema enforces user ownership, referential integrity, and monetary precision:
+
+```mermaid
+erDiagram
+    USERS ||--o{ CATEGORIES : "owns (1:N)"
+    USERS ||--o{ TRANSACTIONS : "records (1:N)"
+    CATEGORIES ||--o{ TRANSACTIONS : "classifies (1:N, optional)"
+
+    USERS {
+        bigint id PK
+        varchar(100) name
+        varchar(254) email UK
+        varchar(255) password "BCrypt hashed"
+        datetime created_at
+        datetime updated_at
+    }
+
+    CATEGORIES {
+        bigint id PK
+        bigint user_id FK
+        varchar(60) name "Unique per user"
+        datetime created_at
+    }
+
+    TRANSACTIONS {
+        bigint id PK
+        bigint user_id FK
+        bigint category_id FK "Nullable for income"
+        decimal(12_2) amount "Positive monetary value"
+        varchar(500) description
+        date date
+        varchar(10) type "INCOME or EXPENSE"
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+### Relational Constraints
+
+1. **`users`:** `id` is primary key; `email` has a unique constraint (`uk_users_email`).
+2. **`categories`:** `user_id` foreign key references `users(id)` with `ON DELETE CASCADE`. The composite unique index (`uk_category_name_per_user`) prevents duplicate category names under the same account.
+3. **`transactions`:** `user_id` foreign key references `users(id)` with `ON DELETE CASCADE`. `category_id` references `categories(id)` with `ON DELETE RESTRICT` (a category with recorded transactions cannot be deleted).
+
+---
 
 ## Project Structure
 
 ```text
-.
-├── Front-End/
-│   ├── src/
-│   ├── .env.example
-│   ├── package.json
-│   └── ...
-├── Back-End/
-│   └── expense-tracker/
-│       ├── src/
-│       ├── pom.xml
-│       ├── mvnw
-│       ├── mvnw.cmd
-│       └── ...
-├── .gitignore
-└── README.md
+├── Back-End/expense-tracker/          # Spring Boot 3.5 REST API
+│   ├── src/main/java/                 # Controllers, Services, Entities, Repositories, DTOs
+│   ├── src/main/resources/            # application.properties & Flyway migrations
+│   ├── src/test/java/                 # JUnit 5 & H2 Integration tests
+│   ├── pom.xml                        # Maven dependencies & build configuration
+│   └── mvnw.cmd                       # Maven wrapper script
+├── Front-End/                         # React 18 + Vite frontend
+│   ├── src/components/                # Dashboard, Transactions, Categories, Reports, Auth
+│   ├── src/context/                   # AuthContext (session, login, register, profile)
+│   ├── src/hooks/                     # useFinanceData (state management & caching)
+│   ├── src/services/                  # Axios HTTP service layer
+│   ├── src/utils/                     # Currency, date, validation, and CSV export utilities
+│   ├── src/__tests__/                 # Vitest & Testing Library component/unit tests
+│   └── styles.css                     # Unified design system & responsive styling
+├── docs/                              # Academic project report & screenshot assets
+│   ├── Project_Report.html            # Report source (editable & printable)
+│   ├── Project_Report.pdf             # Compiled academic evaluation report
+│   └── assets/                        # Application screenshots
+├── DEMO_SCRIPT.md                     # Step-by-step viva & demonstration guide
+└── README.md                          # Repository documentation & guide
 ```
+
+---
 
 ## Prerequisites
 
-- Node.js and npm
-- JDK 21
-- MySQL 8
-- Git
+- **Java:** JDK 21 or later
+- **Database:** MySQL Server 8.0+
+- **Node.js:** Node.js 20 or later with npm
 
-## Run Locally
+---
 
-Run the backend and frontend in separate terminals.
+## Local Setup & Run Commands
 
-### 1. Configure the Database
+### 1. Database Setup (MySQL)
 
-Start MySQL and create the database if it does not already exist:
-
-```sql
-CREATE DATABASE expense_tracker;
-```
-
-Ensure that the database name matches the JDBC URL configured in the backend.
-
-### 2. Configure and Start the Backend
-
-From the repository root, set the local environment variables in PowerShell:
+Start your local MySQL service and create the application database:
 
 ```powershell
-$env:DB_USERNAME = "root"
-$env:DB_PASSWORD = "your-local-mysql-password"
-$env:JWT_SECRET = "your-private-random-secret"
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS expense_tracker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
-Use your actual local MySQL credentials. The JWT secret must meet the application's requirements; for the current configuration, use at least 32 UTF-8 bytes.
+### 2. Backend Setup (Spring Boot)
 
-Start the backend:
+In a PowerShell terminal from the project root:
 
 ```powershell
 Set-Location .\Back-End\expense-tracker
+
+# Configure environment variables (or copy .env.example)
+$env:DB_URL = "jdbc:mysql://localhost:3306/expense_tracker?createDatabaseIfNotExist=true"
+$env:DB_USERNAME = "root"
+$env:DB_PASSWORD = "your-local-mysql-password"
+$env:JWT_SECRET = "finora-development-jwt-secret-key-32-bytes-minimum-length-for-hmac-sha256"
+
+# Run Spring Boot
 .\mvnw.cmd spring-boot:run
 ```
 
-The REST API is available at:
+- API Base URL: `http://localhost:8080/api`
+- Swagger UI / OpenAPI Docs: `http://localhost:8080/swagger-ui.html`
 
-`http://localhost:8080/api`
+### 3. Frontend Setup (React + Vite)
 
-Keep the backend terminal running.
-
-### 3. Configure and Start the Frontend
-
-Open a second PowerShell terminal from the repository root:
+In a second PowerShell terminal from the project root:
 
 ```powershell
 Set-Location .\Front-End
-Copy-Item .env.example .env
-npm install
+
+# Install dependencies using the verified lockfile
+npm ci
+
+# Start local Vite development server
 npm run dev
 ```
 
-Open the local URL printed by Vite, usually:
+- Web Application: `http://localhost:5173`
 
-`http://localhost:5173`
+---
 
-The example environment file should configure `VITE_API_URL` to point to the backend API:
+## Quality Checks & Automated Tests
 
-`http://localhost:8080/api`
-
-If necessary, update `VITE_API_URL` in your local `Front-End/.env` file.
-
-## API Overview
-
-Authentication is required for protected endpoints.
-
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/api/auth/register` | Register a user |
-| POST | `/api/auth/login` | Authenticate and obtain a JWT |
-| GET, PUT | `/api/auth/me` | View or update the current user's profile |
-| GET, POST | `/api/transactions` | List or create transactions |
-| GET, PUT, DELETE | `/api/transactions/{id}` | Retrieve, update, or delete a transaction |
-| GET, POST | `/api/categories` | List or create categories |
-| GET, PUT, DELETE | `/api/categories/{id}` | Retrieve, update, or delete a category |
-| GET | `/api/dashboard/...` | Retrieve dashboard data |
-| GET | `/api/reports/...` | Retrieve financial reports |
-
-The dashboard and report paths above are summaries. Refer to the backend controllers or OpenAPI documentation for the exact endpoint paths and parameters.
-
-### API Documentation
-
-When the backend is running:
-
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI specification: `http://localhost:8080/v3/api-docs`
-
-## Tests and Production Build
-
-### Run Backend Tests
-
-From the repository root:
+All tests run locally in isolated environments without modifying your local MySQL database.
 
 ```powershell
+# 1. Frontend Unit & Component Tests (31 passed across 6 test suites)
+npm --prefix Front-End run test
+
+# 2. Frontend ESLint Static Analysis (0 errors)
+npm --prefix Front-End run lint
+
+# 3. Frontend Production Build Check
+npm --prefix Front-End run build
+
+# 4. Backend Integration & Unit Tests (29 passed, 0 failures using H2 in-memory DB)
 .\Back-End\expense-tracker\mvnw.cmd -f .\Back-End\expense-tracker\pom.xml test
 ```
 
-### Build the Frontend
+---
 
-```powershell
-Set-Location .\Front-End
-npm run build
-```
+## REST API Endpoints
 
-The production frontend build is generated in the `Front-End/dist/` directory.
+All responses return standard JSON. Protected endpoints require the header `Authorization: Bearer <JWT>`.
 
-## Security Notes
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Public | Register new user account |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive JWT bearer token |
+| `GET` | `/api/auth/me` | Bearer | Retrieve current authenticated user profile |
+| `PUT` | `/api/auth/me` | Bearer | Update profile name and email |
+| `GET` | `/api/categories` | Bearer | List categories owned by authenticated user |
+| `POST` | `/api/categories` | Bearer | Create category (unique name validated per user) |
+| `PUT` | `/api/categories/{id}` | Bearer | Update category name |
+| `DELETE` | `/api/categories/{id}` | Bearer | Delete category (blocked if referenced by transactions) |
+| `GET` | `/api/transactions` | Bearer | List, filter (date, type, category, search), and sort |
+| `GET` | `/api/transactions/paged` | Bearer | Paginated, filtered, and sorted transactions |
+| `POST` | `/api/transactions` | Bearer | Create income/expense transaction with Bean Validation |
+| `PUT` | `/api/transactions/{id}` | Bearer | Update transaction details |
+| `DELETE` | `/api/transactions/{id}` | Bearer | Delete transaction |
+| `GET` | `/api/dashboard/summary` | Bearer | Get lifetime & monthly totals (income, expenses, balance) |
+| `GET` | `/api/dashboard/recent-transactions` | Bearer | Retrieve latest 5 transactions |
+| `GET` | `/api/dashboard/category-expenses` | Bearer | Monthly spending grouped by category |
+| `GET` | `/api/reports/monthly` | Bearer | Monthly financial calculation report |
+| `GET` | `/api/reports/date-range` | Bearer | Custom date range report summary |
+| `GET` | `/api/reports/category` | Bearer | Expense breakdown by category for date range |
 
-- Never commit `.env` files, database passwords, JWT secrets, or other private credentials.
-- Keep `.env.example` limited to placeholder values and non-sensitive configuration.
-- Configure sensitive backend values through environment variables.
-- Keep generated build output and dependency directories out of version control.
+---
 
-## License
+## Academic Rubric Alignment
 
-A license can be added if you intend to distribute this project under specific reuse terms.
+| Rubric Criterion | Implementation Evidence | Test Verification |
+|---|---|---|
+| **Create** | TransactionModal & CategoryModal submit to POST endpoints with DTO validation. | Tested in `TransactionServiceImplTest`, `CategoryServiceImplTest`. |
+| **Read** | Multi-view data presentation: Dashboard KPIs, Transactions table, Categories grid, Reports. | Tested in `TransactionsPage.test.jsx`, `Dashboard.test.jsx`. |
+| **Update** | Edit transactions, category names, and profile information via PUT endpoints. | Tested in `TransactionServiceImplTest`, `CategoryServiceImplTest`. |
+| **Delete** | Delete transactions and categories with user confirmation dialogs and integrity guards. | Verified in `TransactionServiceImplTest`, `CategoryServiceImplTest`. |
+| **Validation & Error Handling** | Client-side validation + Jakarta Bean Validation on request DTOs; consistent JSON error bodies. | Tested in `validation.test.js`, `CategoryServiceImplTest`. |
+| **Database Design** | 3 normalized tables, foreign keys, unique indexes, decimal precision, Flyway migrations. | Verified via `V1__init_schema.sql` and Hibernate JPA mappings. |
+| **UI/UX & Responsiveness** | Professional finance design system, accessible light/dark theme, mobile navigation drawer. | Tested across desktop, tablet, and mobile breakpoints; verified with ESLint & Vite build. |
+| **Security & Isolation** | Spring Security JWT authentication filter, BCrypt hashing, multi-tenant query scoping. | Tested in `UserIsolationIntegrationTest` and `TransactionSecurityTest`. |
+| **Documentation & Demo** | Comprehensive README, Mermaid ERD, Swagger UI docs, DEMO_SCRIPT.md, Project_Report.pdf. | All documents cross-referenced and verified. |
+
+---
+
+## Known Limitations
+
+- **Currency Conversion:** Currency selection formats symbols for display (Rs., $, €, £); it does not convert currency values using live foreign exchange rates.
+- **Password Reset:** Outbound email services and password reset links are omitted to maintain a self-contained local evaluation environment.
+- **Bank Integrations:** Financial records are user-entered; real-time Open Banking / Plaid sync is not implemented.

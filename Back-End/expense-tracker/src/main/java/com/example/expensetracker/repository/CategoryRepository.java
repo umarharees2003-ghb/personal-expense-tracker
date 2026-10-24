@@ -10,4 +10,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByUser_IdOrderByNameAsc(Long userId);
 
     Optional<Category> findByIdAndUser_Id(Long id, Long userId);
+
+    boolean existsByNameIgnoreCaseAndUser_Id(String name, Long userId);
+
+    boolean existsByNameIgnoreCaseAndUser_IdAndIdNot(String name, Long userId, Long id);
 }

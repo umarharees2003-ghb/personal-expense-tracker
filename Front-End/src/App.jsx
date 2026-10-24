@@ -39,6 +39,8 @@ function AppContent() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All transactions');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [sort, setSort] = useState('date_desc');
+  const [currency, setCurrency] = useState(() => window.localStorage.getItem('finora.currency') || 'LKR');
   const [mobileNav, setMobileNav] = useState(false);
   const [period, setPeriod] = useState('This month');
   const [rangeStart, setRangeStart] = useState(toDateInputValue(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
@@ -80,13 +82,26 @@ function AppContent() {
     if (filter !== 'All transactions') params.type = filter === 'Income' ? 'INCOME' : 'EXPENSE';
     if (categoryFilter) params.categoryId = categoryFilter;
     if (search.trim()) params.search = search.trim();
+    if (sort) {
+      const [field, direction] = sort.split('_');
+      params.sortBy = field;
+      params.sortDirection = direction;
+    }
     return params;
-  }, [period, rangeStart, rangeEnd, filter, categoryFilter, search]);
+  }, [period, rangeStart, rangeEnd, filter, categoryFilter, search, sort]);
 
   useEffect(() => {
     if (!user) return undefined;
-    const timer = window.setTimeout(() => finance.loadTransactions(transactionFilters).catch(() => {}), search ? 250 : 0);
-    return () => window.clearTimeout(timer);
+    let active = true;
+    const timer = window.setTimeout(() => {
+      finance.loadTransactions(transactionFilters).then(() => {
+        if (!active) return;
+      }).catch(() => {});
+    }, search ? 250 : 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
   }, [user?.id, transactionFilters]);
 
   useEffect(() => {
@@ -257,10 +272,10 @@ function AppContent() {
   };
 
   return <div className={`app-shell${dark ? ' dark-mode' : ''}`}>
-    <Sidebar {...{ page, setPage, mobileNav, setMobileNav, transactions: finance.allTransactions, profile: user, setLoggedIn: logout, flash }} />
+    <Sidebar {...{ page, setPage, mobileNav, setMobileNav, transactions: finance.allTransactions, profile: user, setLoggedIn: logout }} />
     {mobileNav && <button className="nav-backdrop" aria-label="Close menu" onClick={() => setMobileNav(false)} />}
     <main className="main-panel">
-      <Topbar {...{ page, setPage, search, setSearch, setMobileNav, flash, profile: user }} />
+      <Topbar {...{ page, setPage, search, setSearch, setMobileNav, profile: user }} />
       <div className="page-content">
         {page === 'Overview' && <Dashboard
           profile={user}
@@ -293,6 +308,8 @@ function AppContent() {
           setRangeEnd={setRangeEnd}
           search={search}
           setSearch={setSearch}
+          sort={sort}
+          setSort={setSort}
         />}
         {page === 'Categories' && <CategoriesPage
           categories={categoryStats}
@@ -320,7 +337,7 @@ function AppContent() {
           onRetry={() => finance.loadReport({ mode: reportPeriod === 'This month' ? 'month' : 'range', startDate: reportStart, endDate: reportEnd }).catch(() => {})}
         />}
         {page === 'Profile' && <ProfilePage profile={user} onSave={saveProfile} onLogout={logout} loading={actionLoading} error={actionError} />}
-        {page === 'Settings' && <SettingsPage dark={dark} setDark={setDark} flash={flash} />}
+        {page === 'Settings' && <SettingsPage dark={dark} setDark={setDark} flash={flash} currency={currency} setCurrency={setCurrency} />}
         {actionError && page !== 'Profile' && <div className="action-error" role="alert">{actionError}</div>}
       </div>
       <footer className="page-footer"><span>Made for a healthier relationship with money <span className="footer-heart">♥</span></span><span>© {new Date().getFullYear()} Finora</span></footer>
@@ -328,6 +345,7 @@ function AppContent() {
     {modal === 'transaction' && <TransactionModal
       transaction={editing}
       categories={finance.categories}
+      currency={currency}
       onCreateCategory={() => {
         setReturnToTransaction(true);
         setEditingCategory(null);

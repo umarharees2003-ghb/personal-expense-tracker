@@ -1,7 +1,8 @@
 import React from 'react';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, Sparkles, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, Download, Printer, Sparkles, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { IconBox, money } from './common.jsx';
 import { RequestStatus } from './RequestStatus.jsx';
+import { exportReportToCsv } from '../utils/csvExport.js';
 
 export function ReportsPage({
   report, period, setPeriod, startDate, setStartDate, endDate, setEndDate,
@@ -17,10 +18,40 @@ export function ReportsPage({
     : `${startDate} – ${endDate}`;
   const chartHeight = (value) => `${Math.max(value ? value / maxValue * 88 : 0, value ? 2 : 0)}%`;
 
+  const handleExport = () => {
+    exportReportToCsv(report, chartLabel, `finora-report-${period.toLowerCase().replace(/\s+/g, '-')}.csv`);
+  };
+
   return <>
-    <div className="page-title-row"><div><div className="eyebrow"><span className="live-dot" /> YOUR FINANCIAL RECAP</div><h1>Reports & insights</h1><p>A clearer picture of how your money moves.</p></div><button className="button-quiet report-download" onClick={() => window.print()}><Download size={16} /> Download report</button></div>
-    <div className="report-period"><CalendarDays size={17} /><span>Showing report for</span><select value={period} onChange={(event) => setPeriod(event.target.value)}><option>This month</option><option>Custom range</option></select></div>
-    {period === 'Custom range' && <div className="date-range-fields"><label>From<input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label><label>To<input type="date" min={startDate} value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label></div>}
+    <div className="page-title-row">
+      <div>
+        <div className="eyebrow"><span className="live-dot" /> YOUR FINANCIAL RECAP</div>
+        <h1>Reports & insights</h1>
+        <p>A clearer picture of how your money moves.</p>
+      </div>
+      <div className="page-actions-group">
+        <button className="button-quiet" onClick={() => window.print()} title="Print or save this report as PDF using your browser">
+          <Printer size={16} /> Print / Save PDF
+        </button>
+        <button className="button-primary report-download" onClick={handleExport} title="Export financial summary and category breakdown to CSV" disabled={!report}>
+          <Download size={16} /> Export CSV
+        </button>
+      </div>
+    </div>
+    <div className="report-period">
+      <CalendarDays size={17} />
+      <span>Showing report for</span>
+      <select value={period} onChange={(event) => setPeriod(event.target.value)}>
+        <option>This month</option>
+        <option>Custom range</option>
+      </select>
+    </div>
+    {period === 'Custom range' && (
+      <div className="date-range-fields">
+        <label>From<input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
+        <label>To<input type="date" min={startDate} value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
+      </div>
+    )}
     <RequestStatus loading={loading} error={error} onRetry={onRetry} />
     {!loading && !error && report && <>
       <div className="report-kpis">
