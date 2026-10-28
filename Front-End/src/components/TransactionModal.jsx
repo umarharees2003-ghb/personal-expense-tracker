@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react';
-import { getCurrencySymbol } from '../utils/formatCurrency.js';
+import { convertCurrency, getCurrencySymbol } from '../utils/formatCurrency.js';
 
 export function TransactionModal({
   transaction,
@@ -14,6 +14,9 @@ export function TransactionModal({
 }) {
   const [type, setType] = useState(transaction?.type ?? 'expense');
   const symbol = getCurrencySymbol(currency);
+  const defaultAmount = transaction?.amount != null
+    ? Number(convertCurrency(transaction.amount, 'LKR', currency).toFixed(2))
+    : '';
 
   return (
     <div
@@ -73,7 +76,7 @@ export function TransactionModal({
                 step="0.01"
                 name="amount"
                 placeholder="0.00"
-                defaultValue={transaction?.amount ?? ''}
+                defaultValue={defaultAmount}
                 required
                 autoFocus
                 aria-label="Transaction amount"

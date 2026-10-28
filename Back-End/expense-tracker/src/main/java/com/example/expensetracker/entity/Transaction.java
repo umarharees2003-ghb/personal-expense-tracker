@@ -37,7 +37,7 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(name = "amount_in_LKR", nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
     @Column(length = 500)
@@ -65,4 +65,12 @@ public class Transaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
+
+    public BigDecimal getAmount_in_LKR() {
+        return amount;
+    }
+
+    public void setAmount_in_LKR(BigDecimal amount) {
+        this.amount = amount;
+    }
 }

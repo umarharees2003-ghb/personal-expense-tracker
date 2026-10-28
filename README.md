@@ -23,11 +23,11 @@ Finora is a full-stack personal finance tracking application designed for course
 ## Features
 
 - **Authentication & Security:** User registration and sign-in with BCrypt password hashing, stateless JWT bearer token authentication, and multi-tenant data isolation.
-- **Transactions CRUD:** Create, read, update, and delete income and expense records with monetary precision (`DECIMAL(12,2)`), search, date filters, 4-way sorting, and pagination.
+- **Transactions CRUD:** Create, read, update, and delete income and expense records with monetary precision (`amount_in_LKR DECIMAL(12,2)`), search, date filters, 4-way sorting, and pagination.
 - **Category Management:** User-owned categories with duplicate name prevention (case-insensitive) and relational integrity safeguards preventing deletion of categories with linked transactions.
 - **Dashboard & Cash Flow:** Financial summary KPI cards (Total Balance, Total Income, Total Expenses, Monthly Savings Rate), monthly income vs. expense comparison bar chart, and spending-by-category breakdown donut chart.
 - **Reports & Export:** Period-based financial recaps (monthly and custom date ranges), category breakdown progress bars, browser Print/Save PDF support, and CSV export.
-- **User Experience:** Professional financial UI design system, accessible light and dark themes, mobile-responsive navigation drawer, and selectable currency formatting (LKR, USD, EUR, GBP).
+- **User Experience & Currency Conversion:** Professional financial UI design system, accessible light and dark themes, mobile-responsive navigation drawer, and real-time multi-currency conversion (LKR, USD, EUR, GBP) using standard exchange rates with automatic base-currency persistence.
 
 ---
 
@@ -99,7 +99,7 @@ erDiagram
         bigint id PK
         bigint user_id FK
         bigint category_id FK "Nullable for income"
-        decimal(12_2) amount "Positive monetary value"
+        decimal(12_2) amount_in_LKR "Positive monetary value in LKR"
         varchar(500) description
         date date
         varchar(10) type "INCOME or EXPENSE"
@@ -133,11 +133,6 @@ erDiagram
 │   ├── src/utils/                     # Currency, date, validation, and CSV export utilities
 │   ├── src/__tests__/                 # Vitest & Testing Library component/unit tests
 │   └── styles.css                     # Unified design system & responsive styling
-├── docs/                              # Academic project report & screenshot assets
-│   ├── Project_Report.html            # Report source (editable & printable)
-│   ├── Project_Report.pdf             # Compiled academic evaluation report
-│   └── assets/                        # Application screenshots
-├── DEMO_SCRIPT.md                     # Step-by-step viva & demonstration guide
 └── README.md                          # Repository documentation & guide
 ```
 
@@ -204,7 +199,7 @@ npm run dev
 All tests run locally in isolated environments without modifying your local MySQL database.
 
 ```powershell
-# 1. Frontend Unit & Component Tests (31 passed across 6 test suites)
+# 1. Frontend Unit & Component Tests (39 passed across 6 test suites)
 npm --prefix Front-End run test
 
 # 2. Frontend ESLint Static Analysis (0 errors)
@@ -259,12 +254,12 @@ All responses return standard JSON. Protected endpoints require the header `Auth
 | **Database Design** | 3 normalized tables, foreign keys, unique indexes, decimal precision, Flyway migrations. | Verified via `V1__init_schema.sql` and Hibernate JPA mappings. |
 | **UI/UX & Responsiveness** | Professional finance design system, accessible light/dark theme, mobile navigation drawer. | Tested across desktop, tablet, and mobile breakpoints; verified with ESLint & Vite build. |
 | **Security & Isolation** | Spring Security JWT authentication filter, BCrypt hashing, multi-tenant query scoping. | Tested in `UserIsolationIntegrationTest` and `TransactionSecurityTest`. |
-| **Documentation & Demo** | Comprehensive README, Mermaid ERD, Swagger UI docs, DEMO_SCRIPT.md, Project_Report.pdf. | All documents cross-referenced and verified. |
+| **Documentation & API Specs** | Comprehensive README, Mermaid ERD, and interactive Swagger UI / OpenAPI documentation. | Verified via `/swagger-ui.html` and README documentation. |
 
 ---
 
 ## Known Limitations
 
-- **Currency Conversion:** Currency selection formats symbols for display (Rs., $, €, £); it does not convert currency values using live foreign exchange rates.
-- **Password Reset:** Outbound email services and password reset links are omitted to maintain a self-contained local evaluation environment.
-- **Bank Integrations:** Financial records are user-entered; real-time Open Banking / Plaid sync is not implemented.
+- **External Banking Feeds:** Financial records are entered and managed directly by users; third-party live bank syncing (e.g., Plaid / Open Banking API) is omitted to keep the application self-contained.
+- **Password Reset via Email:** Outbound SMTP email services and tokenized password reset links are omitted to maintain a self-contained local evaluation environment without external mail credentials.
+- **Exchange Rate Source:** Currency conversion utilizes standardized fixed exchange rates relative to base currency (LKR); automated dynamic live Forex API polling is not configured.

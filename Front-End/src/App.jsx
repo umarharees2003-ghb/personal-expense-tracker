@@ -19,6 +19,7 @@ import { getApiError } from './services/api.js';
 import { createCategory, deleteCategory, updateCategory } from './services/categoryService.js';
 import { createTransaction, deleteTransaction, updateTransaction } from './services/transactionService.js';
 import { currentMonthParams, toDateInputValue } from './utils/formatDate.js';
+import { convertCurrency } from './utils/formatCurrency.js';
 import { mapTransactionRequest, categoryAppearance } from './utils/mappers.js';
 import { validateCategoryName, validateProfile, validateTransaction } from './utils/validation.js';
 
@@ -145,8 +146,9 @@ function AppContent() {
     event.preventDefault();
     setActionError('');
     const form = new FormData(event.currentTarget);
+    const enteredAmount = form.get('amount');
     const values = {
-      amount: form.get('amount'),
+      amount: enteredAmount,
       description: form.get('description'),
       date: form.get('date'),
       type: form.get('type'),
@@ -159,7 +161,11 @@ function AppContent() {
     }
     setActionLoading(true);
     try {
-      const payload = mapTransactionRequest(values);
+      const amountInBase = convertCurrency(enteredAmount, currency, 'LKR');
+      const payload = mapTransactionRequest({
+        ...values,
+        amount: Number(amountInBase.toFixed(2)),
+      });
       if (editing) await updateTransaction(editing.id, payload);
       else await createTransaction(payload);
       setModal(null);
@@ -276,7 +282,7 @@ function AppContent() {
     {mobileNav && <button className="nav-backdrop" aria-label="Close menu" onClick={() => setMobileNav(false)} />}
     <main className="main-panel">
       <Topbar {...{ page, setPage, search, setSearch, setMobileNav, profile: user }} />
-      <div className="page-content">
+      <div className="page-content" key={currency}>
         {page === 'Overview' && <Dashboard
           profile={user}
           income={Number(finance.dashboard?.summary.totalIncome ?? 0)}

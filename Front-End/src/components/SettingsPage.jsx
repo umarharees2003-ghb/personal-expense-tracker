@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, Sun } from 'lucide-react';
+import { getCurrencySymbol } from '../utils/formatCurrency.js';
 
 export function SettingsPage({ dark, setDark, flash, currency = 'LKR', setCurrency }) {
   const [monthlySummary, setMonthlySummary] = useState(() => window.localStorage.getItem('finora.monthlySummary') !== 'false');
@@ -48,16 +49,16 @@ export function SettingsPage({ dark, setDark, flash, currency = 'LKR', setCurren
         </div>
 
         <div className="settings-section-heading section-spaced">
-          <span className="settings-section-icon currency-icon">Rs</span>
+          <span className="settings-section-icon currency-icon">{getCurrencySymbol(currency)}</span>
           <div>
-            <h2>Currency Formatting</h2>
-            <p>Choose how currency symbols appear across your transactions and reports.</p>
+            <h2>Currency &amp; Conversion</h2>
+            <p>Choose your display currency. Finora converts values dynamically across all views.</p>
           </div>
         </div>
         <div className="setting-row">
           <div>
             <strong>Display currency</strong>
-            <small>Changes formatting only; amounts are not converted between currencies.</small>
+            <small>Amounts across transactions, dashboard totals, and reports are automatically converted using standard exchange rates.</small>
           </div>
           <select
             className="settings-select"
@@ -70,6 +71,15 @@ export function SettingsPage({ dark, setDark, flash, currency = 'LKR', setCurren
             <option value="EUR">EUR — Euro (€)</option>
             <option value="GBP">GBP — British Pound (£)</option>
           </select>
+        </div>
+        <div className="currency-rates-banner">
+          <span className="currency-rates-title">Standard Exchange Rates (Base: LKR)</span>
+          <div className="currency-rates-grid">
+            <span className="rate-pill">1 USD = Rs. 300.00</span>
+            <span className="rate-pill">1 EUR = Rs. 325.00</span>
+            <span className="rate-pill">1 GBP = Rs. 380.00</span>
+            <span className="rate-pill">1 LKR = Rs. 1.00</span>
+          </div>
         </div>
 
         <div className="settings-section-heading section-spaced">

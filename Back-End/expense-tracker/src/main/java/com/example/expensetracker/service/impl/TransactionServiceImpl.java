@@ -151,7 +151,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private Sort buildSort(String sortBy, String sortDirection) {
         boolean asc = "asc".equalsIgnoreCase(sortDirection);
-        if ("amount".equalsIgnoreCase(sortBy)) {
+        if ("amount".equalsIgnoreCase(sortBy) || "amount_in_lkr".equalsIgnoreCase(sortBy) || "amount_in_LKR".equalsIgnoreCase(sortBy)) {
             return asc
                     ? Sort.by(Sort.Order.asc("amount"), Sort.Order.desc("date"))
                     : Sort.by(Sort.Order.desc("amount"), Sort.Order.desc("date"));
